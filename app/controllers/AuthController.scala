@@ -6,17 +6,20 @@ import com.google.inject.Inject
 import controllers.request.{ReconfirmRegistraion, SignupForm}
 import controllers.service.EmailService
 import dao.{RegistrationStatusDao, UserDao}
-import javax.mail.SendFailedException
+import javax.mail.{MessagingException, SendFailedException}
 import models.RegistrationStatus.EMAIL_CONFIRMATION_SENT
 import models.{RegistrationStatus, User}
+import org.postgresql.util.PSQLException
 import play.api.Configuration
 import play.api.mvc.{AbstractController, ControllerComponents, Request}
+import utils.FSEncryption
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
 
 class AuthController @Inject()(userDao: UserDao,
                                registartionStatusDao: RegistrationStatusDao,
+                               fsEncryption: FSEncryption,
                                config: Configuration, cc: ControllerComponents)
                               (implicit val ec: ExecutionContext) extends AbstractController(cc) {
 
@@ -24,18 +27,18 @@ class AuthController @Inject()(userDao: UserDao,
     Ok("")
   }
 
-  def resendConfirmation = Action.async(parse.json[ReconfirmRegistraion])  { implicit request =>
+  def resendConfirmation = Action.async(parse.json[ReconfirmRegistraion]) { implicit request =>
     Future(Ok("Request received"))
   }
 
   def confirmRegistration(registrationLink: String): Unit = Action.async { request =>
     registartionStatusDao.getOptional(registrationLink).map(status => {
-      if(status.nonEmpty) {
+      if (status.nonEmpty) {
         val regTime: Long = status.get.registrationTime.getTime
         val now: Long = new Date().getTime
         val timeDiff = (now - regTime) / (60 * 1000) % 60 //In minutes
 
-        if(timeDiff <= 30) {
+        if (timeDiff <= 30) {
           registartionStatusDao.delete(registrationLink) //TODO Set the 'registered' field to true in "users" table
           Ok("You're registered with us. Please login yourself to the fastscraping")
         } else {
@@ -50,16 +53,19 @@ class AuthController @Inject()(userDao: UserDao,
   def signUp = Action.async(parse.json[SignupForm]) { implicit request: Request[SignupForm] =>
     val signUpForm = request.body
 
+    println("Got the signup data from client: " + signUpForm)
+
     if (signUpForm.isPasswordFormatCorrect && signUpForm.isEmailFormatCorrect) {
       userDao.notExists(signUpForm.email).flatMap {
         case userNotFound if !userNotFound => Future(BadRequest("User exists"))
         case _ =>
           try {
             sendSignUpMail(signUpForm.email).flatMap { registrationLink =>
-              setRegistrationStatus(RegistrationStatus(signUpForm.email, registrationLink, EMAIL_CONFIRMATION_SENT))
-                .flatMap(statusSaved =>
+              setRegistrationStatus(RegistrationStatus(signUpForm.email, EMAIL_CONFIRMATION_SENT, registrationLink))
+                .flatMap { statusSaved =>
                   if (statusSaved == 1) {
-                    val newUser = User(signUpForm.email, signUpForm.password)
+                    val hashedPwd = fsEncryption.hashPassword(signUpForm.password)
+                    val newUser = User(signUpForm.email, hashedPwd)
                     userDao.insertOne(newUser).map(insertCount =>
                       if (insertCount == 1) {
                         val message =
@@ -75,11 +81,22 @@ class AuthController @Inject()(userDao: UserDao,
                       })
                   } else {
                     Future(InternalServerError("Something went wrong on our end. Please try again later."))
-                  })
+                  }
+                } recover { //If some SQL error comes during insertion of registration status, handle it
+                case NonFatal(ex: PSQLException)
+                  if ex.getLocalizedMessage.contains("duplicate key value violates unique constraint") =>
+                  BadRequest("The email is already registered in our system")
+                case NonFatal(ex: PSQLException) =>
+                  println(s"****************** Unhandled SQL exception ${ex.getLocalizedMessage}")
+                  throw ex
+                case NonFatal(ex: Exception) => throw ex
+              }
             }
           } catch {
             case NonFatal(ex: SendFailedException) =>
               Future(BadRequest("The email you submitted is not legit. Please provide correct email address."))
+            case NonFatal(ex: MessagingException) =>
+              Future(BadRequest("We are not able to deliver the confirmation email. " + ex.getLocalizedMessage))
             case NonFatal(ex: Exception) => throw ex
           }
       }
@@ -94,9 +111,10 @@ class AuthController @Inject()(userDao: UserDao,
 
   private def sendSignUpMail(to: String): Future[String] = Future {
     val registrationLink = EmailService.getRegistarionLink
-    EmailService(to, "ashishtomer@zoho.com", "Confirm you registration", registrationLink, "").sendMail
+    Future(EmailService(to, "ashishtomer@zoho.com", "Confirm you registration", registrationLink, "localhost").sendMail)
     registrationLink
   }
 
   private def setRegistrationStatus(status: RegistrationStatus) = registartionStatusDao.insertOne(status)
+
 }

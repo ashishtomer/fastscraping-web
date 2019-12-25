@@ -10,6 +10,6 @@ case class User(email: String,
                 username: Option[String] = None,
                 contact: Option[String] = None)
 
-object User {
+object User extends ((String, String, Option[String], Option[String], Option[String], Option[String]) => User) {
   val format: OFormat[User] = Json.format[User]
 }

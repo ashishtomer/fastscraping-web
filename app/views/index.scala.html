@@ -1,5 +1,180 @@
-@()
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>fastscraping</title>
+    <script src="http://www.unpkg.com/vue"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@@0.8.0/css/bulma.min.css">
+    <style>
+            .padded-div {
+                padding: 3% 3% 1% 3%;
+            }
 
-@main("Welcome to Play") {
-  <h1>Welcome to Play!</h1>
-}
+            .button-color {
+                border-color: #5D001E;
+                color: #5D001E;
+            }
+
+            .button-color:hover {
+                border-color: #9A1750;
+                color: #9A1750;
+            }
+
+            .is-pulled-right {
+                margin: 0.75em;
+            }
+
+            .logo-button {
+                border: none;
+            }
+
+            .message-1.title {
+                background-color: #E3E2DF;
+                padding: 1% 3%;
+                margin: 0%;
+            }
+
+            .message-2.title {
+                background-color: #E3AFBC;
+                padding: 1% 3%;
+                margin: 0%;
+            }
+
+            .message-3.title {
+                background-color: #EE4C7C;
+                padding: 1% 3%;
+                margin: 0%;
+            }
+
+            .signup-div, .signup-div h1, .signup-div h2 {
+                background-color: #9A1750;
+                color: #E3E2DF;
+            }
+
+            .signup-div label {
+                color: #E3E2DF;
+            }
+
+            .signup-div form {
+                padding: 5%;
+            }
+
+            .signup-div form a{
+                color: #E3AFBC;
+            }
+
+            .signup-div form label:hover{
+                color: #fff;
+            }
+
+            .fs-form-btn {
+                height: 30px;
+                width: 100%;
+                background-color: #fff;
+            }
+
+        </style>
+</head>
+<body>
+
+<div class="columns padded-div">
+    <div class="column is-3"><!-- for logo -->
+        <a class="button logo-button"><img src=@routes.Assets.versioned("images/fs-logo-9A1750-with-gradient.png")></a>
+    </div>
+    <div class="column is-8">
+        <div class="columns">
+            <div class="column is-7 is-hidden-mobile"></div>
+            <div class="column is-5">
+                <button class="button button-color is-pulled-right">Log In</button>
+                <button class="button button-color is-pulled-right">Contact Us</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="section">
+    <div class="container">
+        <div class="tile is-ancestor">
+            <div class="tile is-6 is-vertical">
+                <div >
+                    <div id="vueLearnCanvas" v-on:mousemove=updateXY($event)>
+                        <h1>{{name}}</h1>
+                        <em>{{age}}</em>
+                        <p>{{greet("morning")}}</p>
+                        <p>Surf <a v-bind:href=google>google</a></p>
+                        <button v-on:click=addAge()>Increase age</button>
+                        <button v-on:click=descreaseAge()>Decrease age</button>
+
+                        <p>
+                            x: {{canvasX}}
+                            y: {{canvasY}}
+                        </p>
+                        <p>
+                            Email: {{email}}
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="tile is-6 is-vertical" id="vue-app">
+                <div class="tile is-vertical"><!--For page message-->
+                    <h1 class="message-1 title">Scrape websites</h1>
+                    <h1 class="message-2 title is-medium">Faster</h1>
+                    <h1 class="message-3 title is-large">Easier</h1>
+                </div>
+
+                <div class="tile signup-div"><!--For sign up form-->
+                    <div class="tile is-6">
+                        <section class="hero">
+                            <div class="hero-body">
+                                <div class="container">
+                                    <h1 class="title">
+                                        Start your FREE 100 pages trial
+                                    </h1>
+                                    <h2 class="subtitle">
+                                        <i>Cancel anyime.</i>
+                                    </h2>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                    <div class="tile is-6">
+                        <form>
+                            <div class="field">
+                                <label class="label">Email</label>
+                                <div class="control">
+                                    <input class="input bordered-input" type="email" name="Email" placeholder="Email" v-model="email">
+                                </div>
+                                <p class="help is-danger" v-bind:class={"is-hidden":validEmail}>Email is incorrect</p>
+                            </div>
+                            <div class="field">
+                                <label class="label">Password</label>
+                                <div class="control">
+                                    <input class="input bordered-input" type="password" name="password" placeholder="Password" v-model="password">
+                                </div>
+                                <p class="help is-danger" v-bind:class={"is-hidden":validPass}>Password is weak. Follow <a href="#">password policy</a></p>
+                            </div>
+                            <div class="field">
+                                <div class="control">
+                                    <label class="checkbox">
+                                        <input type="checkbox" v-model="agreeToTerms">
+                                        I agree to the <a href="#">terms and conditions</a>
+                                    </label>
+                                </div>
+                                <p class="help is-danger" v-bind:class={"is-hidden":validTC}>Please read and agree with our <a href="#">terms and conditions</a></p>
+                            </div>
+                            <div class="control">
+                                <button class="button fs-form-btn" v-on:click.prevent=postForm>Let's start</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
+<script src=@routes.Assets.versioned("javascripts/app.js")></script>
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+</body>
+</html>
