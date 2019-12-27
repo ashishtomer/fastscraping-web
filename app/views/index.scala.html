@@ -47,83 +47,83 @@
                 margin: 0%;
             }
 
-            .signup-div, .signup-div h1, .signup-div h2 {
+            .login-div, .login-div h1, .login-div h2, .signup-div, .signup-div h1, .signup-div h2 {
                 background-color: #9A1750;
                 color: #E3E2DF;
             }
 
+            .login-div label,
             .signup-div label {
                 color: #E3E2DF;
             }
 
+            .login-div form,
             .signup-div form {
                 padding: 5%;
             }
 
-            .signup-div form a{
-                color: #E3AFBC;
+            .login-div a,
+            .signup-div a{
+                color: #ffcb1f;
             }
 
+            .login-div form label:hover,
             .signup-div form label:hover{
                 color: #fff;
             }
 
             .fs-form-btn {
-                height: 30px;
                 width: 100%;
                 background-color: #fff;
+            }
+
+            nav.navbar {
+                padding: 3%;
             }
 
         </style>
 </head>
 <body>
+<div id="vue-app">
+    <nav class="navbar" role="navigation" aria-label="main navigation">
+        <div class="navbar-brand">
+            <a class="navbar-item" href="#o">
+                <img src=@routes.Assets.versioned("images/fs-logo-9A1750-with-gradient.png")>
+            </a>
 
-<div class="columns padded-div">
-    <div class="column is-3"><!-- for logo -->
-        <a class="button logo-button"><img src=@routes.Assets.versioned("images/fs-logo-9A1750-with-gradient.png")></a>
-    </div>
-    <div class="column is-8">
-        <div class="columns">
-            <div class="column is-7 is-hidden-mobile"></div>
-            <div class="column is-5">
-                <button class="button button-color is-pulled-right">Log In</button>
-                <button class="button button-color is-pulled-right">Contact Us</button>
-            </div>
+            <a role="button" class="navbar-burger burger" v-on:click.prevent.stop=displayMenu aria-label="menu" aria-expanded="false" data-target="navbarBasicExample">
+                <span aria-hidden="true"></span>
+                <span aria-hidden="true"></span>
+                <span aria-hidden="true"></span>
+            </a>
         </div>
-    </div>
-</div>
 
-<section class="section">
-    <div class="container">
-        <div class="tile is-ancestor">
-            <div class="tile is-6 is-vertical">
-                <div >
-                    <div id="vueLearnCanvas" v-on:mousemove=updateXY($event)>
-                        <h1>{{name}}</h1>
-                        <em>{{age}}</em>
-                        <p>{{greet("morning")}}</p>
-                        <p>Surf <a v-bind:href=google>google</a></p>
-                        <button v-on:click=addAge()>Increase age</button>
-                        <button v-on:click=descreaseAge()>Decrease age</button>
-
-                        <p>
-                            x: {{canvasX}}
-                            y: {{canvasY}}
-                        </p>
-                        <p>
-                            Email: {{email}}
-                        </p>
+        <div id="navbarBasicExample" class="navbar-menu" v-bind:class="{'is-active' : menuDisplayed}">
+            <div class="navbar-end">
+                <div class="navbar-item">
+                    <div class="buttons">
+                        <a class="button button-color">Contact Us</a>
+                        <a class="button button-color"  v-on:click.prevent.stop=displayLoginForm>Log in</a>
                     </div>
                 </div>
             </div>
-            <div class="tile is-6 is-vertical" id="vue-app">
+        </div>
+    </nav>
+
+    <section class="section">
+    <div class="container">
+        <div class="tile is-ancestor">
+            <div class="tile is-6 is-vertical">
+
+            </div>
+            <div class="tile is-6 is-vertical">
                 <div class="tile is-vertical"><!--For page message-->
                     <h1 class="message-1 title">Scrape websites</h1>
                     <h1 class="message-2 title is-medium">Faster</h1>
                     <h1 class="message-3 title is-large">Easier</h1>
                 </div>
 
-                <div class="tile signup-div"><!--For sign up form-->
+                <div class="tile signup-div" v-if="showSignupForm"><!--For sign up form-->
                     <div class="tile is-6">
                         <section class="hero">
                             <div class="hero-body">
@@ -145,14 +145,14 @@
                                 <div class="control">
                                     <input class="input bordered-input" type="email" name="Email" placeholder="Email" v-model="email">
                                 </div>
-                                <p class="help is-danger" v-bind:class={"is-hidden":validEmail}>Email is incorrect</p>
+                                <p class="help is-warning" v-bind:class={"is-hidden":validEmail}>Email is incorrect</p>
                             </div>
                             <div class="field">
                                 <label class="label">Password</label>
                                 <div class="control">
                                     <input class="input bordered-input" type="password" name="password" placeholder="Password" v-model="password">
                                 </div>
-                                <p class="help is-danger" v-bind:class={"is-hidden":validPass}>Password is weak. Follow <a href="#">password policy</a></p>
+                                <p class="help is-warning" v-bind:class={"is-hidden":validPass}>Password is weak. Follow <a href="#">password policy</a></p>
                             </div>
                             <div class="field">
                                 <div class="control">
@@ -161,19 +161,60 @@
                                         I agree to the <a href="#">terms and conditions</a>
                                     </label>
                                 </div>
-                                <p class="help is-danger" v-bind:class={"is-hidden":validTC}>Please read and agree with our <a href="#">terms and conditions</a></p>
+                                <p class="help is-warning" v-bind:class={"is-hidden":validTC}>Please read and agree with our <a href="#">terms and conditions</a></p>
                             </div>
                             <div class="control">
-                                <button class="button fs-form-btn" v-on:click.prevent=postForm>Let's start</button>
+                                <button class="button fs-form-btn" v-on:click.prevent.stop=postForm>Let's start</button>
+                                <p class="help is-warning">{{invalidFormMessage}}</p>
                             </div>
                         </form>
                     </div>
+                </div>
+                <div class="tile signup-div" v-if="showSignupSuccess">
+                    <section class="hero is-bold">
+                        <div class="hero-body">
+                            <div class="container">
+                                <h1 class="title">You're registered successfully. Please <a v-on:click.prevent.stop=displayLoginForm>Log in</a></h1>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+                <div class="tile login-div" v-if="showLoginForm">
+                    <section class="hero is-bold">
+                        <div class="hero-body">
+                            <div class="container">
+                                <form>
+                                    <div class="field">
+                                        <label class="label">Email</label>
+                                        <div class="control">
+                                            <input class="input bordered-input" type="email" name="Email" placeholder="Email" v-model="signInEmail">
+                                        </div>
+                                        <p class="help is-warning" v-bind:class={"is-hidden":validEmail}>Email is incorrect</p>
+                                    </div>
+                                    <div class="field">
+                                        <label class="label">Password</label>
+                                        <div class="control">
+                                            <input class="input bordered-input" type="password" name="password" placeholder="Password" v-model="signInPassword">
+                                        </div>
+                                        <p class="help is-warning" v-bind:class={"is-hidden":validPass}>Password is weak. Follow <a href="#">password policy</a></p>
+                                    </div>
+                                    <br/>
+                                    <div class="control">
+                                        <button class="button fs-form-btn" v-on:click.prevent.stop=postForm>Log In</button>
+                                        <p class="help">Don't have an account? Please <a href="#" v-on:click.prevent.stop=displaySignUpForm>register</a></p>
+                                        <p class="help is-warning">{{invalidFormMessage}}</p>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </section>
                 </div>
             </div>
 
         </div>
     </div>
 </section>
+</div>
 <script src=@routes.Assets.versioned("javascripts/app.js")></script>
 <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
 </body>

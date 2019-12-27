@@ -2,7 +2,7 @@ package controllers.request
 
 import play.api.libs.json.{Json, OFormat}
 
-case class SignupForm(email: String, password: String, agreeToTerms: Boolean) {
+case class Signup(email: String, password: String, agreeToTerms: Boolean) {
 
   def isEmailFormatCorrect = {
     val emailRegex = ".+@[^\\.]+\\.[^\\.]+"
@@ -14,6 +14,6 @@ case class SignupForm(email: String, password: String, agreeToTerms: Boolean) {
   }
 }
 
-object SignupForm {
-  implicit val format: OFormat[SignupForm] = Json.format[SignupForm]
+object Signup {
+  implicit val format: OFormat[Signup] = Json.format[Signup]
 }

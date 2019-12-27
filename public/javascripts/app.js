@@ -2,16 +2,48 @@ let myComp = new Vue({
     el: '#vue-app',
 
     data: {
+        menuDisplayed: false,
+        showSignupForm: true,
+        showSignupSuccess: false,
+        showLoginForm: false,
+
         email: '',
         password: '',
         agreeToTerms: false,
 
+        signInEmail: '',
+        signInPassword: '',
+
         validEmail: true,
         validPass: true,
-        validTC: true
+        validTC: true,
+
+        invalidFormMessage: ''
     },
 
     methods: {
+
+        displaySignUpForm: function() {
+            this.showSignupSuccess = false;
+            this.showSignupForm = true;
+            this.showLoginForm = false;
+            this.menuDisplayed = false;
+            this.invalidFormMessage = '';
+        },
+
+        displayMenu: function() {
+            console.log('Showing menu')
+            this.menuDisplayed = !this.menuDisplayed;
+        },
+
+        displayLoginForm: function() {
+            this.showSignupSuccess = false;
+            this.showSignupForm = false;
+            this.showLoginForm = true;
+            this.menuDisplayed = false;
+            this.invalidFormMessage = '';
+        },
+
         postForm: function() {
 
             this.validEmail = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(this.email)
@@ -28,18 +60,14 @@ let myComp = new Vue({
                     agreeToTerms: this.agreeToTerms
                 }
 
-                console.log('Sending response')
-
                 axios.post('http://localhost:9000/v1/api/signup', postData)
-                .then(function(response) {
-                    console.log('Got response')
-                    console.log(response)
+                .then(response => {
+                    this.showSignupForm = false;
+                    this.showSignupSuccess = true;
                 })
-                .catch(function(error) {
-                    console.log(error)
+                .catch(error => {
+                    this.invalidFormMessage = error.response.data.error;
                 })
-            } else {
-                console.log("Didn't send request as the form is valid - " + validForm)
             }
         }
     }

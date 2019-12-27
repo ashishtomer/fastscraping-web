@@ -3,16 +3,18 @@ package controllers
 import java.util.Date
 
 import com.google.inject.Inject
-import controllers.request.{ReconfirmRegistraion, SignupForm}
-import controllers.service.EmailService
+import controllers.request.{Login, ReconfirmRegistraion, Signup}
+import controllers.service.{EmailService, SessionService}
 import dao.{RegistrationStatusDao, UserDao}
 import javax.mail.{MessagingException, SendFailedException}
 import models.RegistrationStatus.EMAIL_CONFIRMATION_SENT
-import models.{RegistrationStatus, User}
+import models.{RegistrationStatus, User, UserSession}
 import org.postgresql.util.PSQLException
 import play.api.Configuration
+import play.api.http.ContentTypes
 import play.api.mvc.{AbstractController, ControllerComponents, Request}
-import utils.FSEncryption
+import utils.{ApiMessage, FSEncryption}
+import utils.ApiMessage._
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
@@ -20,11 +22,30 @@ import scala.util.control.NonFatal
 class AuthController @Inject()(userDao: UserDao,
                                registartionStatusDao: RegistrationStatusDao,
                                fsEncryption: FSEncryption,
+                               sessionService: SessionService,
                                config: Configuration, cc: ControllerComponents)
                               (implicit val ec: ExecutionContext) extends AbstractController(cc) {
 
-  def logIn = Action(parse.json) { implicit request =>
-    Ok("")
+  def logIn = Action(parse.json[Login]) { implicit request: Request[Login] =>
+    val loginData = request.body
+    userDao.selectOne(loginData.email).map {
+      case Some(user: User) =>
+        if(fsEncryption.checkPassword(loginData.password, user.password)) {
+          sessionService.startSession(user.email).map {
+            case Some(userSession: UserSession) =>
+              Ok(ApiMessage(Some(LOGIN_SUCCESS)))
+                .withCookies("session" -> userSession.sessionId)
+                .as(ContentTypes.JSON)
+
+            case _ => InternalServerError(ApiMessage(error = Some(UNABLE_TO_LOGIN))).as(ContentTypes.JSON)
+          }
+        } else {
+          BadRequest(ApiMessage(error = Some(LOGIN_INCORRECT_PASS))).as(ContentTypes.JSON)
+        }
+      case None =>
+        val loginError = """{"error": "User not found with this email"}"""
+        BadRequest(ApiMessage(error = Some(LOGIN_INCORRECT_MAIL))).as(ContentTypes.JSON)
+    }
   }
 
   def resendConfirmation = Action.async(parse.json[ReconfirmRegistraion]) { implicit request =>
@@ -50,7 +71,7 @@ class AuthController @Inject()(userDao: UserDao,
     })
   }
 
-  def signUp = Action.async(parse.json[SignupForm]) { implicit request: Request[SignupForm] =>
+  def signUp = Action.async(parse.json[Signup]) { implicit request: Request[Signup] =>
     val signUpForm = request.body
 
     println("Got the signup data from client: " + signUpForm)
@@ -85,7 +106,8 @@ class AuthController @Inject()(userDao: UserDao,
                 } recover { //If some SQL error comes during insertion of registration status, handle it
                 case NonFatal(ex: PSQLException)
                   if ex.getLocalizedMessage.contains("duplicate key value violates unique constraint") =>
-                  BadRequest("The email is already registered in our system")
+                  val errorMessage = """{"error" : "The email is already registered in our system"}"""
+                  BadRequest(errorMessage).as("application/json")
                 case NonFatal(ex: PSQLException) =>
                   println(s"****************** Unhandled SQL exception ${ex.getLocalizedMessage}")
                   throw ex

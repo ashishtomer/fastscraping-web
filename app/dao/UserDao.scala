@@ -13,6 +13,8 @@ class UserDao @Inject() (protected val dbConfigProvider: DatabaseConfigProvider)
   import profile.api._
   private val Users = TableQuery[UserTable]
 
+  def selectOne(email: String): Future[Option[User]] = db.run(Users.filter(_.email === email).result.headOption)
+
   def selectAll: Future[Seq[User]] = db.run(Users.result)
 
   def insertOne(user: User): Future[Int] = db.run(Users += user)

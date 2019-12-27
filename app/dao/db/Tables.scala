@@ -2,9 +2,10 @@ package dao.db
 
 import java.sql.Date
 
-import models.{RegistrationStatus, User}
+import models.{RegistrationStatus, User, UserSession}
 import slick.jdbc.H2Profile.api._
 import slick.lifted.Tag
+import slick.sql.SqlProfile.ColumnOption.NotNull
 
 class UserTable(tag: Tag) extends Table[User](tag, "users") {
 
@@ -26,4 +27,13 @@ class RegistrationStatusTable(tag: Tag) extends Table[RegistrationStatus](tag, "
 
   override def * =
     (email, status, registrationLink, registrationTime) <> (RegistrationStatus.tupled, RegistrationStatus.unapply)
+}
+
+class UserSessionTable(tag: Tag) extends Table[UserSession](tag, "session") {
+  def email: Rep[String] = column[String]("email", NotNull)
+  def sessionId: Rep[String] = column[String]("session_id", O.PrimaryKey)
+  def startAt: Rep[Date] = column[Date]("start_at", NotNull)
+  def endAt: Rep[Option[Date]] = column[Option[Date]]("end_at")
+
+  override def * = (email, sessionId, startAt, endAt) <> (UserSession.tupled, UserSession.unapply)
 }

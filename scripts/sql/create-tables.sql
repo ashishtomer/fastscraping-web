@@ -13,3 +13,10 @@ create table IF NOT EXISTS registration_status(
     status varchar not null,
     registration_time date not null
 );
+
+create table IF NOT EXISTS user_session(
+    email varchar not null,
+    session_id varchar primary key,
+    start_at date not null,
+    end_at date
+);
