@@ -3,24 +3,22 @@ package controllers
 import java.util.Date
 
 import com.google.inject.Inject
-import controllers.request.{Login, ReconfirmRegistraion, Signup}
+import controllers.request.{Login, Signup}
 import controllers.service.{EmailService, SessionService}
-import dao.{RegistrationStatusDao, UserDao}
+import dao.{RegistrationStatusDao, UsersDao}
 import javax.mail.{MessagingException, SendFailedException}
 import models.RegistrationStatus.EMAIL_CONFIRMATION_SENT
 import models.{RegistrationStatus, User, UserSession}
 import org.postgresql.util.PSQLException
-import play.api.Configuration
 import play.api.http.ContentTypes
-import play.api.libs.json.OFormat
-import play.api.mvc.{AbstractController, ControllerComponents, Cookie, Request, Result}
-import utils.{ApiMessage, FSConfig, FSEncryption}
+import play.api.mvc._
 import utils.ApiMessage._
+import utils.{ApiMessage, FSConfig, FSEncryption, FsError, FsSuccess}
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
 
-class AuthController @Inject()(userDao: UserDao,
+class AuthController @Inject()(usersDao: UsersDao,
                                registartionStatusDao: RegistrationStatusDao,
                                fsEncryption: FSEncryption,
                                sessionService: SessionService,
@@ -33,7 +31,7 @@ class AuthController @Inject()(userDao: UserDao,
     println("The login received")
 
     val loginData = request.body
-    userDao.selectOne(loginData.email).flatMap {
+    usersDao.selectOne(loginData.email).flatMap {
       case Some(user: User) =>
         if(fsEncryption.checkPassword(loginData.password, user.password)) {
           sessionService.startSession(user.email).map {
@@ -52,22 +50,30 @@ class AuthController @Inject()(userDao: UserDao,
     }
   }
 
-  def resendConfirmation = Action.async(parse.json[ReconfirmRegistraion]) { implicit request =>
+/*  def resendConfirmation = Action.async(parse.json[ReconfirmRegistraion]) { implicit request =>
     Future(Ok("Request received"))
-  }
+  }*/
 
-  def confirmRegistration(registrationLink: String): Unit = Action.async { request =>
-    registartionStatusDao.getOptional(registrationLink).map(status => {
-      if (status.nonEmpty) {
-        val regTime: Long = status.get.registrationTime.getTime
+  def confirmRegistration(registrationId: String): Action[Unit] = Action.async(parse.empty) { _ =>
+    val registrationLink = "https://www.fastscraping.com/v1/api/confirm-registration/" + registrationId
+
+    registartionStatusDao.getOptional(registrationLink.trim).map(regStatus => {
+      if (regStatus.nonEmpty) {
+        val regTime: Long = regStatus.get.registrationTime
         val now: Long = new Date().getTime
         val timeDiff = (now - regTime) / (60 * 1000) % 60 //In minutes
+        val status = regStatus.get.status
+        val email = regStatus.get.email
 
-        if (timeDiff <= 30) {
-          registartionStatusDao.delete(registrationLink) //TODO Set the 'registered' field to true in "users" table
-          Ok("You're registered with us. Please login yourself to the fastscraping")
+        if(status == RegistrationStatus.EMAIL_CONFIRMED) {
+          Ok(FsSuccess("Your email is already confirmed, please login."))
+        } else if (status == RegistrationStatus.EMAIL_CONFIRMATION_SENT && timeDiff <= 30) {
+          registartionStatusDao.updateStatus(registrationLink, RegistrationStatus.EMAIL_CONFIRMED)
+          usersDao.updateStatus(email, registered = true)
+
+          Ok(FsSuccess("You're registered with us. Please login yourself to the fastscraping"))
         } else {
-          BadRequest("The link has expired. Please re-send the email")
+          BadRequest(FsError("The link has expired. Please re-send the email"))
         }
       } else {
         BadRequest("No such record found in our system. Please register yourself")
@@ -81,7 +87,7 @@ class AuthController @Inject()(userDao: UserDao,
     println("Got the signup data from client: " + signUpForm)
 
     if (signUpForm.isPasswordFormatCorrect && signUpForm.isEmailFormatCorrect) {
-      userDao.notExists(signUpForm.email).flatMap {
+      usersDao.notExists(signUpForm.email).flatMap {
         case userNotFound if !userNotFound => Future(BadRequest("User exists"))
         case _ =>
           try {
@@ -90,8 +96,8 @@ class AuthController @Inject()(userDao: UserDao,
                 .flatMap { statusSaved =>
                   if (statusSaved == 1) {
                     val hashedPwd = fsEncryption.hashPassword(signUpForm.password)
-                    val newUser = User(signUpForm.email, hashedPwd)
-                    userDao.insertOne(newUser).map(insertCount =>
+                    val newUser = User(signUpForm.email, hashedPwd, registered = false)
+                    usersDao.insertOne(newUser).map(insertCount =>
                       if (insertCount == 1) {
                         val message =
                           """

@@ -1,8 +1,10 @@
 package utils
 
-import play.api.libs.json.Json
+import play.api.libs.json.{Json, OFormat}
 
-object ApiMessage {
+trait ApiMessage
+
+object ApiMessage extends ApiMessage {
     //Success messages
     val LOGIN_SUCCESS = "You've logged in successfully"
 
@@ -27,4 +29,12 @@ object ApiMessage {
        |}
        |""".stripMargin
 
+}
+
+object FsSuccess {
+  def apply(success: String): String = ApiMessage.success(success)
+}
+
+object FsError {
+  def apply(error: String): String = ApiMessage.error(error)
 }

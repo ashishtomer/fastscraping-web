@@ -15,7 +15,7 @@ class SessionService @Inject()(sessionDao: UserSessionDao)(implicit ec: Executio
 
   def startSession(username: String, retry: Int = 0): Future[Option[UserSession]] = {
     val sessionId = UUID.randomUUID().toString
-    val startAt = new Date(System.currentTimeMillis())
+    val startAt = System.currentTimeMillis()
     val userSession = UserSession(username, sessionId, startAt)
 
     sessionDao.insertOne(userSession)

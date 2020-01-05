@@ -1,7 +1,7 @@
 package dao
 
 import com.google.inject.Inject
-import dao.db.{RegistrationStatusTable, UserTable}
+import dao.db.RegistrationStatusTable
 import models.RegistrationStatus
 import play.api.db.slick.{DatabaseConfigProvider, HasDatabaseConfigProvider}
 import slick.driver.JdbcProfile
@@ -21,4 +21,9 @@ class RegistrationStatusDao @Inject()(protected val dbConfigProvider: DatabaseCo
   def getOptional(link: String): Future[Option[RegistrationStatus]] = db.run(Statuses.filter(_.registrationLink === link).result.headOption)
 
   def delete(link: String): Future[Int] = db.run(Statuses.filter(_.registrationLink === link).delete)
+
+  def updateStatus(link: String, status: String) = {
+    val query = for (oldStatus <- Statuses if oldStatus.registrationLink === link) yield oldStatus.status
+    db.run(query.update(status))
+  }
 }

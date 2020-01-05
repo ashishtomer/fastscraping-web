@@ -1,21 +1,15 @@
 package models
 
-import java.sql.Date
+import java.sql.{Date, Timestamp}
 
 import play.api.libs.json.{Json, OFormat}
 
 case class RegistrationStatus(email: String,
                               status: String,
                               registrationLink: String,
-                              registrationTime: Date)
+                              registrationTime: Long = System.currentTimeMillis())
 
-object RegistrationStatus extends ((String, String, String, Date) => RegistrationStatus) {
-
-  def apply(email: String, status: String, registrationLink: String, registrationTime: java.util.Date): RegistrationStatus =
-    new RegistrationStatus(email, status, registrationLink, new Date(registrationTime.getTime))
-
-  def apply(email: String, status: String, registrationLink: String): RegistrationStatus =
-    new RegistrationStatus(email, status, registrationLink, new Date(System.currentTimeMillis()))
+object RegistrationStatus extends ((String, String, String, Long) => RegistrationStatus) {
 
   implicit val format: OFormat[RegistrationStatus] = Json.format[RegistrationStatus]
 

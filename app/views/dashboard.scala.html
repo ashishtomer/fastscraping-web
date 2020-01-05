@@ -1,0 +1,111 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>fastscraping</title>
+        <script src="http://www.unpkg.com/vue"></script>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@@0.8.0/css/bulma.min.css">
+        <style>
+            .padded-div {
+                padding: 3% 3% 1% 3%;
+            }
+
+            .button-color {
+                border-color: #5D001E;
+                color: #5D001E;
+            }
+
+            .button-color:hover {
+                border-color: #9A1750;
+                color: #9A1750;
+            }
+
+            .is-pulled-right {
+                margin: 0.75em;
+            }
+
+            .logo-button {
+                border: none;
+            }
+
+            .message-1.title {
+                background-color: #E3E2DF;
+                padding: 1% 3%;
+                margin: 0%;
+            }
+
+            .message-2.title {
+                background-color: #E3AFBC;
+                padding: 1% 3%;
+                margin: 0%;
+            }
+
+            .message-3.title {
+                background-color: #EE4C7C;
+                padding: 1% 3%;
+                margin: 0%;
+            }
+
+            .login-div, .login-div h1, .login-div h2, .signup-div, .signup-div h1, .signup-div h2 {
+                background-color: #9A1750;
+                color: #E3E2DF;
+            }
+
+            .login-div label,
+            .signup-div label {
+                color: #E3E2DF;
+            }
+
+            .login-div form,
+            .signup-div form {
+                padding: 5%;
+            }
+
+            .login-div a,
+            .signup-div a{
+                color: #ffcb1f;
+            }
+
+            .login-div form label:hover,
+            .signup-div form label:hover{
+                color: #fff;
+            }
+
+            .fs-form-btn {
+                width: 100%;
+                background-color: #fff;
+            }
+
+            nav.navbar {
+                padding: 3%;
+            }
+
+        </style>
+    </head>
+
+    <body>
+        <div id="vue-app">
+            <nav role="navigation" aria-label="main navigation" class="navbar">
+                <div class="navbar-brand">
+                    <a href="#o" class="navbar-item"><img src="/assets/images/fs-logo-9A1750-with-gradient.png"></a>
+                    <a role="button" aria-label="menu" aria-expanded="false" data-target="navbarBasicExample" class="navbar-burger burger">
+                        <span aria-hidden="true"></span>
+                        <span aria-hidden="true"></span>
+                        <span aria-hidden="true"></span>
+                    </a>
+                </div>
+                <div id="navbarBasicExample" class="navbar-menu">
+                    <div class="navbar-end">
+                        <div class="navbar-item">
+                            <div class="buttons">
+                                <a class="button button-color">Contact Us</a>
+                                <a class="button button-color">Log in</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+        </div>
+    </body>
+
+</html>
