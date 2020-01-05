@@ -12,8 +12,9 @@ import models.{RegistrationStatus, User, UserSession}
 import org.postgresql.util.PSQLException
 import play.api.Configuration
 import play.api.http.ContentTypes
-import play.api.mvc.{AbstractController, ControllerComponents, Request}
-import utils.{ApiMessage, FSEncryption}
+import play.api.libs.json.OFormat
+import play.api.mvc.{AbstractController, ControllerComponents, Cookie, Request, Result}
+import utils.{ApiMessage, FSConfig, FSEncryption}
 import utils.ApiMessage._
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -23,28 +24,31 @@ class AuthController @Inject()(userDao: UserDao,
                                registartionStatusDao: RegistrationStatusDao,
                                fsEncryption: FSEncryption,
                                sessionService: SessionService,
-                               config: Configuration, cc: ControllerComponents)
+                               config: FSConfig,
+                               cc: ControllerComponents)
                               (implicit val ec: ExecutionContext) extends AbstractController(cc) {
 
-  def logIn = Action(parse.json[Login]) { implicit request: Request[Login] =>
+  def logIn = Action.async(parse.json[Login]) { implicit request: Request[Login] =>
+
+    println("The login received")
+
     val loginData = request.body
-    userDao.selectOne(loginData.email).map {
+    userDao.selectOne(loginData.email).flatMap {
       case Some(user: User) =>
         if(fsEncryption.checkPassword(loginData.password, user.password)) {
           sessionService.startSession(user.email).map {
             case Some(userSession: UserSession) =>
-              Ok(ApiMessage(Some(LOGIN_SUCCESS)))
-                .withCookies("session" -> userSession.sessionId)
+              Ok(ApiMessage.success(LOGIN_SUCCESS))
+                .withCookies(Cookie("session", userSession.sessionId, maxAge = Some(config.loginActiveTime), path = "/"))
                 .as(ContentTypes.JSON)
 
-            case _ => InternalServerError(ApiMessage(error = Some(UNABLE_TO_LOGIN))).as(ContentTypes.JSON)
+            case _ => InternalServerError(ApiMessage.error(UNABLE_TO_LOGIN)).as(ContentTypes.JSON)
           }
         } else {
-          BadRequest(ApiMessage(error = Some(LOGIN_INCORRECT_PASS))).as(ContentTypes.JSON)
+          Future(BadRequest(ApiMessage.error(LOGIN_INCORRECT_PASS)).as(ContentTypes.JSON))
         }
       case None =>
-        val loginError = """{"error": "User not found with this email"}"""
-        BadRequest(ApiMessage(error = Some(LOGIN_INCORRECT_MAIL))).as(ContentTypes.JSON)
+        Future(BadRequest(ApiMessage.error(LOGIN_INCORRECT_MAIL)).as(ContentTypes.JSON))
     }
   }
 

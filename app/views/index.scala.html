@@ -164,7 +164,7 @@
                                 <p class="help is-warning" v-bind:class={"is-hidden":validTC}>Please read and agree with our <a href="#">terms and conditions</a></p>
                             </div>
                             <div class="control">
-                                <button class="button fs-form-btn" v-on:click.prevent.stop=postForm>Let's start</button>
+                                <button class="button fs-form-btn" v-on:click.prevent.stop=postSignupForm>Let's start</button>
                                 <p class="help is-warning">{{invalidFormMessage}}</p>
                             </div>
                         </form>
@@ -187,20 +187,20 @@
                                     <div class="field">
                                         <label class="label">Email</label>
                                         <div class="control">
-                                            <input class="input bordered-input" type="email" name="Email" placeholder="Email" v-model="signInEmail">
+                                            <input class="input bordered-input" type="email" name="Email" placeholder="Email" v-model="logInEmail">
                                         </div>
                                         <p class="help is-warning" v-bind:class={"is-hidden":validEmail}>Email is incorrect</p>
                                     </div>
                                     <div class="field">
                                         <label class="label">Password</label>
                                         <div class="control">
-                                            <input class="input bordered-input" type="password" name="password" placeholder="Password" v-model="signInPassword">
+                                            <input class="input bordered-input" type="password" name="password" placeholder="Password" v-model="logInPassword">
                                         </div>
                                         <p class="help is-warning" v-bind:class={"is-hidden":validPass}>Password is weak. Follow <a href="#">password policy</a></p>
                                     </div>
                                     <br/>
                                     <div class="control">
-                                        <button class="button fs-form-btn" v-on:click.prevent.stop=postForm>Log In</button>
+                                        <button class="button fs-form-btn" v-on:click.prevent.stop=postLoginForm>Log In</button>
                                         <p class="help">Don't have an account? Please <a href="#" v-on:click.prevent.stop=displaySignUpForm>register</a></p>
                                         <p class="help is-warning">{{invalidFormMessage}}</p>
                                     </div>

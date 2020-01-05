@@ -60,7 +60,7 @@ object EmailService {
   def apply(to: String, from: String, subject: String, content: String, smtpHost: String): EmailService =
     new EmailService(List[String](to), List[String](), List[String](), from, subject, content, smtpHost)
 
-  def getRegistarionLink = "https://www.fastscraping.com/confirm-registration-" + UUID.randomUUID().toString
+  def getRegistarionLink = "https://www.fastscraping.com/v1/api/confirm-registration/" + UUID.randomUUID().toString
 
   def registrationConfirmationBody(linkReferral: String) =
     s"""

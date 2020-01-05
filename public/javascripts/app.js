@@ -11,8 +11,8 @@ let myComp = new Vue({
         password: '',
         agreeToTerms: false,
 
-        signInEmail: '',
-        signInPassword: '',
+        logInEmail: '',
+        logInPassword: '',
 
         validEmail: true,
         validPass: true,
@@ -44,7 +44,7 @@ let myComp = new Vue({
             this.invalidFormMessage = '';
         },
 
-        postForm: function() {
+        postSignupForm: function() {
 
             this.validEmail = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(this.email)
             this.validPass = this.password.length >= 8 && this.password.length <= 20
@@ -69,6 +69,21 @@ let myComp = new Vue({
                     this.invalidFormMessage = error.response.data.error;
                 })
             }
+        },
+
+        postLoginForm: function() {
+            let postData = {
+                email: this.logInEmail,
+                password: this.logInPassword
+            }
+
+            axios.post('http://localhost:9000/v1/api/login', postData)
+            .then(response => {
+                this
+            })
+            .catch(error => {
+                this.invalidFormMessage = error.response.data.error;
+            })
         }
     }
 });

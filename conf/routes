@@ -7,7 +7,11 @@
 GET     /                           controllers.HomeController.index
 
 + nocsrf
-POST    /v1/api/signup                           controllers.AuthController.signUp
+POST    /v1/api/signup                              controllers.AuthController.signUp
++ nocsrf
+POST    /v1/api/login                               controllers.AuthController.logIn
++ nocsrf
+POST    /v1/api/confirm-registration/:regId         controllers.AuthController.confirmRegistration(regId: String)
 
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file               controllers.Assets.versioned(path="/public", file: Asset)
