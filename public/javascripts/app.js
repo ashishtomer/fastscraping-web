@@ -78,9 +78,6 @@ let myComp = new Vue({
             }
 
             axios.post('http://localhost:9000/v1/api/login', postData)
-            .then(response => {
-                this
-            })
             .catch(error => {
                 this.invalidFormMessage = error.response.data.error;
             })

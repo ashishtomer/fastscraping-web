@@ -6,5 +6,7 @@ import play.api.mvc.{AbstractController, ControllerComponents}
 import scala.concurrent.ExecutionContext
 
 class DashboardController @Inject()(cc: ControllerComponents)(implicit val ec: ExecutionContext) extends AbstractController(cc) {
-  def showUserProfile =
+  def showUserProfile = {
+
+  }
 }

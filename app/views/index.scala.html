@@ -200,7 +200,7 @@
                                     </div>
                                     <br/>
                                     <div class="control">
-                                        <button class="button fs-form-btn" v-on:click.prevent.stop=postLoginForm>Log In</button>
+                                        <button class="button fs-form-btn" v-on:click.prevent=postLoginForm>Log In</button>
                                         <p class="help">Don't have an account? Please <a href="#" v-on:click.prevent.stop=displaySignUpForm>register</a></p>
                                         <p class="help is-warning">{{invalidFormMessage}}</p>
                                     </div>
