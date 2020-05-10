@@ -1,7 +1,7 @@
 package controllers
 
 import com.google.inject.Inject
-import controllers.actions.OpenActionProvider.OpenAction
+import actions.OpenActionProvider.OpenAction
 import play.api.Logging
 import play.api.mvc.{AbstractController, ControllerComponents}
 import utils.ResponseUtils.Success

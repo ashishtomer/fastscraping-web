@@ -3,9 +3,9 @@ package controllers
 import java.util.Date
 
 import com.google.inject.Inject
-import controllers.actions.OpenActionProvider.OpenAction
-import controllers.request.{Login, Signup}
-import controllers.service.{EmailService, SessionService}
+import actions.OpenActionProvider.OpenAction
+import request.{Login, Signup}
+import service.{EmailService, SessionService}
 import dao.{RegistrationStatusDao, UsersDao}
 import javax.mail.{MessagingException, SendFailedException}
 import models.RegistrationStatus.EMAIL_CONFIRMATION_SENT

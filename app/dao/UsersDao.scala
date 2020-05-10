@@ -4,7 +4,7 @@ import com.google.inject.Inject
 import dao.db.UsersTable
 import models.User
 import play.api.db.slick.{DatabaseConfigProvider, HasDatabaseConfigProvider}
-import slick.driver.JdbcProfile
+import slick.jdbc.JdbcProfile
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -19,7 +19,7 @@ class UsersDao @Inject()(protected val dbConfigProvider: DatabaseConfigProvider)
 
   def insertOne(user: User): Future[Int] = db.run(Users += user)
 
-  def notExists(email: String) = db.run(Users.filter(_.email === email).countDistinct.result).map(_ == 0)
+  def notExists(email: String) = db.run(Users.filter(_.email === email).distinct.length.result).map(_ == 0)
 
   def updateStatus(email: String, registered: Boolean): Future[Int] = {
     val query = for(user <- Users if user.email === email) yield user.registered

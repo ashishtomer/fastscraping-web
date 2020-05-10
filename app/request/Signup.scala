@@ -1,4 +1,4 @@
-package controllers.request
+package request
 
 import play.api.libs.json.{Json, OFormat}
 

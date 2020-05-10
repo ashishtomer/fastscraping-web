@@ -4,7 +4,7 @@ import com.google.inject.Inject
 import dao.db.UserSessionTable
 import models.UserSession
 import play.api.db.slick.{DatabaseConfigProvider, HasDatabaseConfigProvider}
-import slick.driver.JdbcProfile
+import slick.jdbc.JdbcProfile
 
 import scala.concurrent.{ExecutionContext, Future}
 

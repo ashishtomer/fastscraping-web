@@ -1,4 +1,4 @@
-package controllers.request
+package request
 
 import play.api.Logging
 import play.api.mvc.{Request, WrappedRequest}

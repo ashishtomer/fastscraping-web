@@ -1,7 +1,5 @@
 package dao.db
 
-import java.sql.{Date, Timestamp}
-
 import models.{RegistrationStatus, User, UserSession}
 import slick.jdbc.H2Profile.api._
 import slick.lifted.Tag

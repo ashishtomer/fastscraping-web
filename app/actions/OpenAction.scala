@@ -1,4 +1,4 @@
-package controllers.actions
+package actions
 
 import play.api.Logging
 import play.api.mvc.{Action, ActionBuilder, AnyContent, BodyParser, ControllerComponents, Request, Result}
@@ -18,7 +18,7 @@ object OpenActionProvider extends Logging {
       override def composeAction[A](action: Action[A]): Action[A] = {
         ExceptionHandlingAction(
           TransactionLoggingAction[A](
-            controllers.actions.ResponseHeaderAddingAction[A](action)
+            ResponseHeaderAddingAction[A](action)
           )
         )
       }

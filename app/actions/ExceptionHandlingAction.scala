@@ -1,4 +1,4 @@
-package controllers.actions
+package actions
 
 import play.api.Logging
 import play.api.mvc.{Action, BodyParser, Request, Result}

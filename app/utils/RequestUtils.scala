@@ -3,7 +3,7 @@ package utils
 import java.util.UUID
 
 import akka.Done
-import controllers.request.LoggedRequest
+import request.LoggedRequest
 import play.api.Logging
 import play.api.mvc.{Request, RequestHeader, Result}
 import play.api.routing.Router.Attrs

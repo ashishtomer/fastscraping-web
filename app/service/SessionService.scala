@@ -1,4 +1,4 @@
-package controllers.service
+package service
 
 import java.sql.Date
 import java.util.UUID

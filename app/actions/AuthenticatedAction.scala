@@ -1,4 +1,4 @@
-package controllers.actions
+package actions
 
 class AuthenticatedAction {
 
