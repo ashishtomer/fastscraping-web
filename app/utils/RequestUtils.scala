@@ -19,7 +19,7 @@ object RequestUtils extends Logging {
   val X_FORWARDED_FOR_NOT_FOUND = "X_FORWARDED_FOR_NOT_FOUND"
 
   val allowedRequestMethods = "HEAD, GET, POST, DELETE, PATCH"
-  val allowedRequestHeaders = "Content-Type"
+  val allowedRequestHeaders = s"Content-Type, $X_REQUESTED_WITH"
 
   def getAllowedOrigins(request: Request[_]): String = getRequestOrigin(request).getOrElse("*")
 
