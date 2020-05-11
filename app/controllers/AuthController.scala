@@ -7,9 +7,8 @@ import com.google.inject.Inject
 import dao.{RegistrationStatusDao, UsersDao}
 import javax.mail.{MessagingException, SendFailedException}
 import models.RegistrationStatus.EMAIL_CONFIRMATION_SENT
-import models.{RegistrationStatus, User, UserSession}
+import models.{RegistrationStatus, User}
 import org.postgresql.util.PSQLException
-import play.api.http.ContentTypes
 import play.api.{Configuration, Logging}
 import request.{Login, Signup}
 import play.api.mvc._
@@ -22,39 +21,24 @@ import utils._
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
 
-class AuthController @Inject()(usersDao: UsersDao,
-                               registartionStatusDao: RegistrationStatusDao,
-                               fsEncryption: FSEncryption,
-                               sessionService: SessionService,
+class AuthController @Inject()(registartionStatusDao: RegistrationStatusDao,
                                emailService: EmailService)
                               (implicit
+                               sessionService: SessionService,
+                               usersDao: UsersDao,
                                config: Configuration,
                                ec: ExecutionContext,
-                               cc: ControllerComponents) extends AbstractController(cc) with Logging {
-  private val loginActiveTime = config.get[Int]("login.active-time")
+                               cc: ControllerComponents) extends AbstractController(cc) with Logging with AccessUtils {
+  private val loginActiveTime = config.get[Int]("login.active-time") * 60 * 60
 
   def logIn = OpenAction.async(parse.json[Login]) { implicit request: Request[Login] =>
-
-    logger.info("The login received")
-
     val loginData = request.body
-    usersDao.selectOne(loginData.email).flatMap {
-      case Some(user: User) =>
-        if (fsEncryption.checkPassword(loginData.password, user.password)) {
-          sessionService.startSession(user.email).map {
-            case Some(userSession: UserSession) =>
-              logger.info("The login succedded ... sending response back")
-              Ok(ApiMessage.success(LOGIN_SUCCESS))
-                .withCookies(Cookie("session", userSession.sessionId, maxAge = Some(loginActiveTime), path = "/"))
-                .as(ContentTypes.JSON)
 
-            case _ => InternalServerError(ApiMessage.error(UNABLE_TO_LOGIN)).as(ContentTypes.JSON)
-          }
-        } else {
-          Future(BadRequest(ApiMessage.error(LOGIN_INCORRECT_PASS)).as(ContentTypes.JSON))
-        }
-      case None =>
-        Future(BadRequest(ApiMessage.error(LOGIN_INCORRECT_MAIL)).as(ContentTypes.JSON))
+    ValidateUser(loginData.email, loginData.password).flatMap { user =>
+      ResetOrCreateNewSession(user.email).map { userSession =>
+        Ok(Success(LOGIN_SUCCESS))
+          .withCookies(Cookie("session", userSession.sessionId, Some(loginActiveTime), "/", Some(".localhost")))
+      }
     }
   }
 
@@ -64,7 +48,6 @@ class AuthController @Inject()(usersDao: UsersDao,
 
   def confirmRegistration(registrationId: String): Action[Unit] = OpenAction.async(parse.empty) { _ =>
     val registrationLink = s"${config.get[String]("app.host")}/v1/api/confirm-registration/" + registrationId
-
     logger.info(s"Going to validate the link $registrationLink")
 
     registartionStatusDao.getOptional(registrationLink.trim).map(regStatus => {
@@ -76,17 +59,17 @@ class AuthController @Inject()(usersDao: UsersDao,
         val email = regStatus.get.email
 
         if (status == RegistrationStatus.EMAIL_CONFIRMED) {
-          Ok(Success("Your email is already confirmed, please login.").json)
+          Ok(Success("Your email is already confirmed, please login."))
         } else if (status == RegistrationStatus.EMAIL_CONFIRMATION_SENT && timeDiff <= 30) {
           registartionStatusDao.updateStatus(registrationLink, RegistrationStatus.EMAIL_CONFIRMED)
           usersDao.updateStatus(email, registered = true)
 
-          Ok(Success("You're registered with us. Please login yourself to the fastscraping").json)
+          Ok(Success("You're registered with us. Please login yourself to the fastscraping"))
         } else {
-          BadRequest(Error("The link has expired", "Please re-send the email").json)
+          BadRequest(Error("The link has expired", "Please re-send the email"))
         }
       } else {
-        BadRequest(Error("No such record found in our system", "No registration done for this link").json)
+        BadRequest(Error("No such record found in our system", "No registration done for this link"))
       }
     })
   }
@@ -104,23 +87,23 @@ class AuthController @Inject()(usersDao: UsersDao,
                 setRegistrationStatus(RegistrationStatus(signUpForm.email, EMAIL_CONFIRMATION_SENT, registrationLink))
                   .flatMap { statusSaved =>
                     if (statusSaved == 1) {
-                      val hashedPwd = fsEncryption.hashPassword(signUpForm.password)
+                      val hashedPwd = FSEncryption.hashPassword(signUpForm.password)
                       val newUser = User(signUpForm.email, hashedPwd, registered = false)
                       usersDao.insertOne(newUser).map(insertCount =>
                         if (insertCount == 1) {
                           val message = "Registration done. Check your email and confirm registration."
-                          Ok(Success(message).json)
+                          Ok(Success(message))
                         } else {
-                          InternalServerError(Error("Something went wrong on our end. Please try again later.").json)
+                          InternalServerError(Error("Something went wrong on our end. Please try again later."))
                         })
                     } else {
-                      Future(InternalServerError(Error("Something went wrong on our end. Please try again later.").json))
+                      Future(InternalServerError(Error("Something went wrong on our end. Please try again later.")))
                     }
                   } recover { //If some SQL error comes during insertion of registration status, handle it
                   case NonFatal(ex: PSQLException)
                     if ex.getLocalizedMessage.contains("duplicate key value violates unique constraint") =>
                     val errorMessage = "The email is already registered in our system"
-                    BadRequest(Error(errorMessage).json)
+                    BadRequest(Error(errorMessage))
                   case NonFatal(ex: PSQLException) =>
                     logger.info(s"Unhandled SQL exception ${ex.getLocalizedMessage}")
                     throw ex

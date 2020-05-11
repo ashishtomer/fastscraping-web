@@ -1,41 +1,38 @@
 package utils
 
 import play.api.http.Status.INTERNAL_SERVER_ERROR
-import play.api.libs.json.{Format, Json}
+import play.api.libs.json.{Format, JsValue, Json}
 import play.api.mvc.Result
 import play.api.mvc.Results.Status
 
 object ResponseUtils {
 
-  case class Success(message: String) {
+  case class SuccessMsg(message: String) {
     override def toString = Json.prettyPrint(this.json)
 
     def json = Json.toJson(this)
   }
 
-  object Success {
-    implicit val format: Format[Success] = Json.format[Success]
-
-    def apply(any: Any): Success = new Success(any.toString)
+  object SuccessMsg {
+    implicit val format: Format[SuccessMsg] = Json.format[SuccessMsg]
   }
 
-  case class Error(error: String, cause: String) {
+  case class ErrorMsg(error: String, cause: String) {
     override def toString = Json.prettyPrint(this.json)
 
     def json = Json.toJson(this)
+  }
+
+  object ErrorMsg {
+    implicit val format: Format[ErrorMsg] = Json.format[ErrorMsg]
   }
 
   object Error {
-    implicit val format: Format[Error] = Json.format[Error]
-
-    def apply(error: String): Error = new Error(error, error)
-
-    def apply(any: Any): Error = Error.apply(any.toString)
+    def apply(error: String): JsValue = ErrorMsg(error, error).json
+    def apply(error: String, cause: String): JsValue = ErrorMsg(error, cause).json
   }
 
-  /********** Quick responses **********/
-  object Messages {
-    val InternalServerError: String => Result = content => Status(INTERNAL_SERVER_ERROR)(content)
+  object Success {
+    def apply(message: String): JsValue = SuccessMsg(message).json
   }
-
 }
