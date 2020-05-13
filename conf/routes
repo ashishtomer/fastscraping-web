@@ -3,9 +3,6 @@
 # https://www.playframework.com/documentation/latest/ScalaRouting
 # ~~~~
 
-# An example controller showing a sample home page
-GET     /                                           controllers.HomeController.index
-
 + nocsrf
 POST    /v1/api/signup                              controllers.AuthController.signUp
 + nocsrf
