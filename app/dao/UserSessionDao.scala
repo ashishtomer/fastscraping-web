@@ -23,8 +23,13 @@ class UserSessionDao @Inject() (protected val dbConfigProvider: DatabaseConfigPr
       })
   }
 
-  def selectOne(email: String): Future[Option[UserSession]] = {
-    db.run(SessionTable.filter(_.email === email).result.headOption)
+  def selectOne(email: String, sessionId: String): Future[Option[UserSession]] = {
+    db.run(SessionTable.filter(user => user.email === email && user.sessionId === sessionId).result.headOption)
+  }
+
+  def update(userSession: UserSession): Future[Int] = {
+    val query = for(session <- SessionTable if session.sessionId === userSession.sessionId) yield session.startAt
+    db.run(query.update(userSession.startAt))
   }
 
   def deleteOne(email: String): Future[Int] = db.run(SessionTable.filter(_.email === email).delete)

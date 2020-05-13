@@ -4,7 +4,6 @@ import com.google.inject.Inject
 import actions.OpenActionProvider.OpenAction
 import play.api.Logging
 import play.api.mvc.{AbstractController, ControllerComponents}
-import utils.ResponseUtils.Success
 
 import scala.concurrent.{ExecutionContext, Future}
 

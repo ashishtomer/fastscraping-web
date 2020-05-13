@@ -2,10 +2,9 @@ package utils
 
 import java.security.SecureRandom
 
-import com.google.inject.Inject
 import org.mindrot.jbcrypt.BCrypt
 
-class FSEncryption @Inject()() {
+object FSEncryption {
 
   def hashPassword(password: String): String = {
     val secureRandom = new SecureRandom()

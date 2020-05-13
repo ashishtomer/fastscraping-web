@@ -19,7 +19,7 @@ object RequestUtils extends Logging {
   val X_FORWARDED_FOR_NOT_FOUND = "X_FORWARDED_FOR_NOT_FOUND"
 
   val allowedRequestMethods = "HEAD, GET, POST, DELETE, PATCH"
-  val allowedRequestHeaders = s"Content-Type, $X_REQUESTED_WITH"
+  val allowedRequestHeaders = s"Content-Type, $X_REQUESTED_WITH, $ACCESS_CONTROL_ALLOW_CREDENTIALS"
 
   def getAllowedOrigins(request: Request[_]): String = getRequestOrigin(request).getOrElse("*")
 
@@ -70,7 +70,8 @@ object RequestUtils extends Logging {
     response.withHeaders(
       ACCESS_CONTROL_ALLOW_ORIGIN -> getAllowedOrigins(request),
       ACCESS_CONTROL_ALLOW_METHODS -> allowedRequestMethods,
-      ACCESS_CONTROL_ALLOW_HEADERS -> allowedRequestHeaders
+      ACCESS_CONTROL_ALLOW_HEADERS -> allowedRequestHeaders,
+      ACCESS_CONTROL_ALLOW_CREDENTIALS -> "true"
     )
   }
 
