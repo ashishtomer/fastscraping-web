@@ -12,9 +12,9 @@ import org.postgresql.util.PSQLException
 import play.api.{Configuration, Logging}
 import request.{Login, Signup}
 import play.api.mvc._
-import service.EmailService.SignUpFailedException
 import service.{EmailService, SessionService}
 import utils.ApiMessage._
+import utils.Exceptions.SignUpFailedException
 import utils.ResponseUtils.{Error, Success}
 import utils._
 
@@ -48,7 +48,6 @@ class AuthController @Inject()(registartionStatusDao: RegistrationStatusDao,
 
   def confirmRegistration(registrationId: String): Action[Unit] = OpenAction.async(parse.empty) { _ =>
     val registrationLink = s"${config.get[String]("app.host")}/v1/api/confirm-registration/" + registrationId
-    logger.info(s"Going to validate the link $registrationLink")
 
     registartionStatusDao.getOptional(registrationLink.trim).map(regStatus => {
       if (regStatus.nonEmpty) {
@@ -79,7 +78,7 @@ class AuthController @Inject()(registartionStatusDao: RegistrationStatusDao,
 
     if (signUpForm.isPasswordFormatCorrect && signUpForm.isEmailFormatCorrect) {
       usersDao.notExists(signUpForm.email).flatMap {
-        case userNotFound if !userNotFound => Future(BadRequest("User exists"))
+        case userNotFound if !userNotFound => Future(BadRequest(Error("User exists")))
         case _ =>
           try {
             sendSignUpMail(s"${signUpForm.firstName} ${signUpForm.lastName}", signUpForm.email)
@@ -91,8 +90,7 @@ class AuthController @Inject()(registartionStatusDao: RegistrationStatusDao,
                       val newUser = User(signUpForm.email, hashedPwd, registered = false)
                       usersDao.insertOne(newUser).map(insertCount =>
                         if (insertCount == 1) {
-                          val message = "Registration done. Check your email and confirm registration."
-                          Ok(Success(message))
+                          Ok(Success( "Registration done. Check your email and confirm registration"))
                         } else {
                           InternalServerError(Error("Something went wrong on our end. Please try again later."))
                         })
@@ -105,30 +103,30 @@ class AuthController @Inject()(registartionStatusDao: RegistrationStatusDao,
                     val errorMessage = "The email is already registered in our system"
                     BadRequest(Error(errorMessage))
                   case NonFatal(ex: PSQLException) =>
-                    logger.info(s"Unhandled SQL exception ${ex.getLocalizedMessage}")
+                    logger.error(s"Unhandled SQL exception ${ex.getLocalizedMessage}")
                     throw ex
                   case NonFatal(ex: Exception) => throw ex
                 }
               }
           } catch {
             case NonFatal(ex: SendFailedException) =>
-              Future(BadRequest("The email you submitted is not legit. Please provide correct email address."))
+              Future(BadRequest(Error("The email you submitted is not legit. Please provide correct email address.")))
             case NonFatal(ex: MessagingException) =>
-              Future(BadRequest("We are not able to deliver the confirmation email. " + ex.getLocalizedMessage))
+              Future(BadRequest(Error("We are not able to deliver the confirmation email. " + ex.getLocalizedMessage)))
             case NonFatal(ex: Exception) => throw ex
           }
       }
     } else if (!signUpForm.isPasswordFormatCorrect) {
-      Future(BadRequest("The password format is incorrect"))
+      Future(BadRequest(Error("The password format is incorrect")))
     } else if (!signUpForm.isEmailFormatCorrect) {
-      Future(BadRequest("The email format is incorrect"))
+      Future(BadRequest(Error("The email format is incorrect")))
     } else {
-      Future(InternalServerError("Something went wrong. Please report the issue to us at contact@fastscraping.com"))
+      Future(InternalServerError(Error("Something went wrong. Please report the issue to us at contact@fastscraping.com")))
     }
   }
 
   private def sendSignUpMail(fullName: String, to: String): Future[String] = {
-    val redirectUrl = EmailService.getRedirectUrl()
+    val redirectUrl = emailService.getRedirectUrl()
     emailService.sendMail(to, "Confirm your registration", EmailTemplates.confirmSignUp(fullName, redirectUrl))
       .map {
         case false => throw SignUpFailedException(s"Couldn't send the sign up mail to $to")

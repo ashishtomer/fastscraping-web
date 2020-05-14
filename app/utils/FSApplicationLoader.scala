@@ -1,22 +1,15 @@
+package utils
+
 import play.api.inject.guice.{GuiceApplicationBuilder, GuiceApplicationLoader, GuiceableModule}
-import play.api.{Application, ApplicationLoader, Configuration}
+import play.api.{ApplicationLoader, Configuration}
 
-class FSApplicationLoader(guiceApplicationBuilder: GuiceApplicationBuilder) extends ApplicationLoader {
+class FSApplicationLoader(guiceApplicationBuilder: GuiceApplicationBuilder) extends GuiceApplicationLoader() {
   def this() = this(new GuiceApplicationBuilder)
-
-  override def load(context: ApplicationLoader.Context): Application = {
-    println("""
-              |#########################################################
-              |### Running application with custom ApplicationLoader ###
-              |#########################################################
-              |""".stripMargin)
-    builder(context).build
-  }
 
   /**
    * Construct a builder to use for loading the given context.
    */
-  protected def builder(context: ApplicationLoader.Context): GuiceApplicationBuilder = {
+  override def builder(context: ApplicationLoader.Context): GuiceApplicationBuilder = {
     guiceApplicationBuilder
       .disableCircularProxies()
       .in(context.environment)
@@ -29,7 +22,7 @@ class FSApplicationLoader(guiceApplicationBuilder: GuiceApplicationBuilder) exte
    * implementation of this method provides bindings that most applications
    * should include.
    */
-  protected def overrides(context: ApplicationLoader.Context): Seq[GuiceableModule] = {
+  override protected def overrides(context: ApplicationLoader.Context): Seq[GuiceableModule] = {
     GuiceApplicationLoader.defaultOverrides(context)
   }
 
@@ -47,6 +40,6 @@ class FSApplicationLoader(guiceApplicationBuilder: GuiceApplicationBuilder) exte
       ("email.auth_pass" -> emailPass)
     )
 
-    initialConfig.withFallback(configFromEnvs)
+    initialConfig ++ configFromEnvs
   }
 }

@@ -58,6 +58,12 @@ class EmailService @Inject()(configuration: Configuration)(implicit ec: Executio
     }
   }
 
+  def getRedirectUrl()(implicit conf: Configuration): String = {
+    val registrationId = UUID.randomUUID()
+    val root = conf.get[String]("app.host")
+    root + "/v1/api/confirm-registration/" + registrationId
+  }
+
   private def getSession: Session = {
     if(session == null) {
       session = Session.getInstance(props, new Authenticator() {
@@ -68,14 +74,4 @@ class EmailService @Inject()(configuration: Configuration)(implicit ec: Executio
     session
   }
 
-}
-
-object EmailService {
-  def getRedirectUrl()(implicit conf: Configuration): String = synchronized {
-    val registrationId = UUID.randomUUID()
-    val root = conf.get[String]("app.host")
-    root + "/v1/api/confirm-registration/" + registrationId
-  }
-
-  case class SignUpFailedException(message: String) extends RuntimeException(message)
 }
