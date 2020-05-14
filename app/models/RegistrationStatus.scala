@@ -1,7 +1,5 @@
 package models
 
-import java.sql.{Date, Timestamp}
-
 import play.api.libs.json.{Json, OFormat}
 
 case class RegistrationStatus(email: String,

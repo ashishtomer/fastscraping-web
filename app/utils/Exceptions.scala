@@ -11,6 +11,7 @@ object Exceptions {
   case class FsDatabaseError(msg: String) extends FsException1(msg)
   case class FsConfigException(msg: String) extends FsException1(msg)
   case class FsNotFoundException(msg: String) extends FsException1(msg)
+  case class SignUpFailedException(msg: String) extends FsException1(msg)
   case class FsUnauthorizedException(msg: String) extends FsException1(msg)
   case class FsSessionNotResetException(msg: String) extends FsException1(msg)
 

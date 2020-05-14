@@ -20,7 +20,7 @@ object TimeBasedId {
   }
 
   def get: String = {
-    val nanoTime = System.nanoTime()
+    val nanoTime = synchronized(System.nanoTime()) //Two users can't generate same IDs (at least in one JVM)
     val nanoTimeCharArr: Array[String] = nanoTime.toString.split("")
     val id = new StringBuffer(nanoTimeCharArr.length)
 

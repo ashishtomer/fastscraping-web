@@ -1,8 +1,9 @@
 package utils
 
+import helpers.{FsTestBed, MockedClasses}
 import org.scalatestplus.play.PlaySpec
 
-class TimeBasedIdSpec extends PlaySpec {
+class TimeBasedIdSpec extends PlaySpec with FsTestBed {
 
   "TimeBasedId" should {
 

@@ -15,7 +15,6 @@ case class ExceptionHandlingAction[A](action: Action[A]) extends Action[A] with 
   override val parser: BodyParser[A] = action.parser
 
   override def apply(request: Request[A]): Future[Result] = {
-
     action(request) recover {
       case NonFatal(ex: FsNotFoundException) =>
         logger.error(s"Error processing request", ex)
